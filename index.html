@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HCI Slots</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- https://favicon.io/emoji-favicons/cherries -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+</head>
+<body>
+    <div id="loader-container">
+        <span class="loader"></span>
+        <div id="loading-text" class="">Loading...</div>
+    </div>
+    <div class="slot-wrapper">
+        <div class="slots">
+            <div class="reel"></div>
+            <div class="reel"></div>
+            <div class="reel"></div>
+        </div>
+        <div class="slot-info">
+            <div class="left-items">
+                <div class="total" id="total">TOTAL: $1000</div>
+                <div class="bet" id="bet">BET: $100</div>
+            </div>
+            <div class="right-items">
+                <button type="button" id="sub-roll">-</button>
+                <button type="button" id="roll">ROLL</button>
+                <button type="button" id="add-roll">+</button>
+            </div>
+        </div>
+    </div>
+    <script src="script.js" type="module"></script>
+</body>
+</html>
