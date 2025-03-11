@@ -58,9 +58,9 @@ let rollProfit = 0
 let betSize = 100
 
 const sounds = {
-    spin: new Audio('./sounds/slotmachine.mp3'),
-    win: new Audio('./sounds/yipee.mp3'),   
-    lose: new Audio('./sounds/metalpipe.mp3')
+    spin: new Audio('https://raw.githubusercontent.com/Aiden-Rodriguez/slot_machine_sounds/main/slotmachine.mp3'),
+    win: new Audio('https://raw.githubusercontent.com/Aiden-Rodriguez/slot_machine_sounds/main/yippee-tbh.mp3'),   
+    lose: new Audio('https://raw.githubusercontent.com/Aiden-Rodriguez/slot_machine_sounds/main/Metal20Pipes20Falling20Sound.mp3')
 };
 
 let soundVolume = 0.5;
