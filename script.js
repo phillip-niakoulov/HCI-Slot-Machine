@@ -57,6 +57,25 @@ let totalMoney = 1000
 let rollProfit = 0
 let betSize = 100
 
+const sounds = {
+    spin: new Audio('./sounds/slotmachine.mp3'),
+    win: new Audio('./sounds/yipee.mp3'),   
+    lose: new Audio('./sounds/metalpipe.mp3')
+};
+
+let soundVolume = 0.5;
+sounds.spin.volume = soundVolume;
+sounds.win.volume = soundVolume;
+sounds.lose.volume = soundVolume;
+
+// Adds Volume Slider to GUI
+gui.add({ soundVolume }, 'soundVolume', 0, 1, 0.1).name('Sound Volume').onChange((value) => {
+    soundVolume = value;
+    sounds.spin.volume = value;
+    sounds.win.volume = value;
+    sounds.lose.volume = value;
+});
+
 let winRates = {
     "seven": { index: 1, multiplier: 25, chance: 0.05 },
     "tripleBar": { index: 6, multiplier: 10, chance: 0.1 },
@@ -103,12 +122,15 @@ const hciDataSliders = {
 };
 const interestSlider = gui.add(hciDataSliders, 'Interest', 0, 1).name('Interest').onChange((value) => {
     hciData.Interest = value;
+    updateBodyBackground();
 });
 const engagementSlider = gui.add(hciDataSliders, 'Engagement', 0, 1).name('Engagement').onChange((value) => {
     hciData.Engagement = value;
+    updateBodyBackground();
 });
 const excitementSlider = gui.add(hciDataSliders, 'Excitement', 0, 1).name('Excitement').onChange((value) => {
     hciData.Excitement = value;
+    updateBodyBackground();
 });
 
 function toggleSliders() {
@@ -175,7 +197,7 @@ function setHCIData(message) {
             dataBuffer.push({...hciData});
             removeOldData();
             
-
+            updateBodyBackground();
             // Add timeout to show loading if no more data is recieved in 5 seconds
             clearTimeout();
             startDataTimeout()
@@ -302,6 +324,8 @@ function rollAll(targets) {
     
     // Win conditions
     if (indexes[0] == indexes[1] && indexes[1] == indexes[2]) {
+        sounds.win.currentTime = 0; 
+        sounds.win.play();
         const winCls = indexes[0] == indexes[2] ? "win2" : "win1";
         
         updateTotal(rollProfit)
@@ -311,12 +335,25 @@ function rollAll(targets) {
             document.querySelector(".slots").classList.remove(winCls);
             
         }, 2000);
+    } else {
+        sounds.lose.currentTime = 0;
+        sounds.lose.play();
     }
   });
 };
 
+function updateBodyBackground() {
+    const Excitement = Math.round(hciData.Excitement * 255);   // R
+    const Engagement = Math.round(hciData.Engagement * 255);  // G
+    const Interest = Math.round(hciData.Interest * 255); // B
 
+    const color1 = `rgb(${Excitement}, ${Engagement}, ${Interest})`;
+    const color2 = `rgb(${Math.min(Excitement + 50, 255)}, ${Math.min(Engagement + 50, 255)}, ${Math.min(Interest + 50, 255)})`;
 
+    document.body.style.background = `linear-gradient(45deg, ${color1} 0%, ${color2} 100%)`;
+}
+
+updateBodyBackground();
 // -----------------------------  ROLLING LOGIC  ------------------------------
 
 function computeAverageEngagement() {
@@ -534,12 +571,17 @@ function generateWinning(winRates) {
 
 
 // ------------------------------  GAME LOGIC  --------------------------------
+sounds.spin.loop = false;
 function startRoll() {
-    if (totalMoney - betSize >= 0 && !spinning && ((connected && Math.floor(Date.now() / 1000) - hciData.Time <= 5) || debugMode)) { // check if last HCI data was <= 5 seconds ago
+    if (totalMoney - betSize >= 0 && !spinning && ((connected && Math.floor(Date.now() / 1000) - hciData.Time <= 5) || debugMode)) {
         spinning = true;
-        spinCount++
-        updateTotal(-betSize)
-        rollAll(calculateRiggedValues());
+        spinCount++;
+        updateTotal(-betSize);
+        sounds.spin.currentTime = 0;
+        sounds.spin.play();
+        rollAll(calculateRiggedValues()).then(() => {
+            sounds.spin.pause(); // Stop looping when done
+        });
     }
 }
 
