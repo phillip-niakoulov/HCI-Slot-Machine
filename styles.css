@@ -11,9 +11,26 @@ body {
     /*transition: background 0.5s ease;*/
 }
 
+.header-container {
+    position: relative;
+    display: flex;
+    justify-content: flex-start; /* Aligns it to the left */
+    align-items: flex-start; /* Aligns it to the top */
+    position: absolute; /* Positions it at the top-left */
+    top: 10px; /* Adjusts spacing from the top */
+    left: 10px; /* Adjusts spacing from the left */
+    margin: 0;
+    z-index: 1000; /* Ensures it doesn't interfere with other elements */
+}
+
+#header-image {
+    width: 250px;
+    max-width: 100%;
+}
+
 .slots {
     position: relative;
-    width: 276.5px;
+    width: 450px;
     height: 237px;
     display: flex;
     justify-content: space-between;

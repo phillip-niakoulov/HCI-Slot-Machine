@@ -60,10 +60,16 @@ let betSize = 100
 const sounds = {
     spin: new Audio('https://raw.githubusercontent.com/Aiden-Rodriguez/slot_machine_sounds/main/slotmachine.mp3'),
     win: new Audio('https://raw.githubusercontent.com/Aiden-Rodriguez/slot_machine_sounds/main/yippee-tbh.mp3'),   
-    lose: new Audio('https://raw.githubusercontent.com/Aiden-Rodriguez/slot_machine_sounds/main/Metal20Pipes20Falling20Sound.mp3')
+    lose: new Audio('https://raw.githubusercontent.com/Aiden-Rodriguez/slot_machine_sounds/main/Metal20Pipes20Falling20Sound.mp3'),
+    not_locked: new Audio('https://raw.githubusercontent.com/BlakeMasters/dontopen/main/sc.mp3'),
+    intro: new Audio('https://raw.githubusercontent.com/BlakeMasters/dontopen/main/lgg.mp3​'),
+    goggins: new Audio('https://raw.githubusercontent.com/BlakeMasters/dontopen/main/gogginsofgambling.mp3')
 };
 
 let soundVolume = 0.5;
+sounds.goggins.volume = 0.7;
+sounds.not_locked.volume = soundVolume;
+sounds.intro.volume = soundVolume;
 sounds.spin.volume = soundVolume;
 sounds.win.volume = soundVolume;
 sounds.lose.volume = soundVolume;
@@ -189,6 +195,41 @@ function setHCIData(message) {
             hciData.Engagement = parsedData.Engagement;
             hciData.Excitement = parsedData.Excitement;
             hciData.Time = parsedData.Time
+            
+            if (
+                hciData.Interest < 0.3 &&
+                hciData.Engagement < 0.3 &&
+                hciData.Excitement < 0.3
+              ) {
+                  sounds.not_locked.currentTime = 0;
+                  sounds.not_locked.play().then(() => {
+                    console.log('Playback');
+                }).catch(err => {
+                    console.error('audio failed:', err);
+                });
+                  document.body.style.background =
+                  'linear-gradient(45deg,rgb(239, 121, 78) 10%,rgb(239, 169, 6) 100%)';
+                
+                const slotWrapper = document.querySelector('.slot-wrapper');
+                if (slotWrapper) {
+                    slotWrapper.style.backgroundColor = 'rgba(64, 0, 0, 0.8)';
+                }
+
+                const slotInfo = document.querySelector('.slot-info');
+                if (slotInfo) {
+                    slotInfo.style.color = 'white';
+                }
+            } else {
+                updateBodyBackground(); 
+                const slotWrapper = document.querySelector('.slot-wrapper');
+                if (slotWrapper) {
+                    slotWrapper.style.backgroundColor = 'transparent';
+                }
+                const slotInfo = document.querySelector('.slot-info');
+                if (slotInfo) {
+                    slotInfo.style.color = 'black';
+                }
+            }
 
             interestSlider.setValue(hciData.Interest);
             engagementSlider.setValue(hciData.Engagement);
@@ -229,28 +270,35 @@ function updateLoaderState() {
     const loadingText = document.querySelector('#loading-text');
     const loaderContainer = document.getElementById('loader-container');
     
-    if ((connected && Math.floor(Date.now() / 1000) - hciData.Time <= 5) || debugMode) {
-        // ready
-        loader.classList.add('hidden');
-        loadingText.classList.add('hidden');
-        loaderContainer.classList.remove('loading-background');
-        loaderContainer.classList.add('hidden');
-    } else { // not ready
-        loader.classList.remove('hidden');
-        loadingText.classList.remove('hidden');
-        loaderContainer.classList.add('loading-background');
-        loaderContainer.classList.remove('hidden');
-
-        if (!connected && hciData.Time == 0) {
-            loadingText.textContent = 'Connecting to broker...';
-        } else if (!connected && hciData.Time != 0) {
-            loadingText.textContent = 'Reconnecting to broker...';
-        } else if (connected && Math.floor(Date.now() / 1000) - hciData.Time > 5) {
-            loadingText.textContent = 'Waiting for EEG data...';
-        }
-        
+    if (debugMode) {
+      loaderContainer.style.zIndex = '-1';
+      loader.classList.add('hidden');
+      loadingText.classList.add('hidden');
+      return;
+    } else {
+      loaderContainer.style.zIndex = '10';
     }
-}
+    
+    if (connected && Math.floor(Date.now() / 1000) - hciData.Time <= 5) {
+      loader.classList.add('hidden');
+      loadingText.classList.add('hidden');
+      loaderContainer.classList.remove('loading-background');
+      loaderContainer.classList.add('hidden');
+    } else {
+      loader.classList.remove('hidden');
+      loadingText.classList.remove('hidden');
+      loaderContainer.classList.add('loading-background');
+      loaderContainer.classList.remove('hidden');
+  
+      if (!connected && hciData.Time == 0) {
+        loadingText.textContent = 'Connecting to broker...';
+      } else if (!connected && hciData.Time != 0) {
+        loadingText.textContent = 'Reconnecting to broker...';
+      } else if (connected && Math.floor(Date.now() / 1000) - hciData.Time > 5) {
+        loadingText.textContent = 'Waiting for EEG data...';
+      }
+    }
+  }  
 updateLoaderState()
 
 // Mapping of indexes to icons: start from banana in middle of initial position and then upwards
@@ -411,8 +459,8 @@ function computeStdDeviationExcitement() {
 function removeOldData() {
     const now = Date.now() / 1000;
     
-    // remove any data over 10 seconds old
-    while (dataBuffer.length > 0 && dataBuffer[0].Time < now - 10) {
+    // remove any data over 7 seconds old
+    while (dataBuffer.length > 0 && dataBuffer[0].Time < now - 7) {
         dataBuffer.shift();
     }
 }
@@ -576,22 +624,73 @@ function startRoll() {
     if (totalMoney - betSize >= 0 && !spinning && ((connected && Math.floor(Date.now() / 1000) - hciData.Time <= 5) || debugMode)) {
         spinning = true;
         spinCount++;
-        updateTotal(-betSize);
+        if (betSize > 0){
+            updateTotal(-betSize); 
+        }
+        else{
+            updateTotal(betSize)
+            console.log("No cheaters : (")
+        }
+
+        
         sounds.spin.currentTime = 0;
         sounds.spin.play();
         rollAll(calculateRiggedValues()).then(() => {
             sounds.spin.pause(); // Stop looping when done
         });
+        if (totalMoney < 0){
+            sounds.not_locked.currentTime = 0;
+            sounds.not_locked.play();
+        }
     }
 }
 
 document.addEventListener('keydown', (event) => {
-    if (event.code === 'Space') {
-        startRoll();
-    } else if (event.code === 'ArrowLeft') {
-        updateBet(-10)
-    } else if (event.code === 'ArrowRight') {
-        updateBet(10)
+    console.log(event.code);
+    switch (event.key) {
+        case ' ':
+            startRoll();
+            break;
+        case 'r':
+            startRoll();
+            break;
+        case 'q':
+            sounds.goggins.loop = false;
+            sounds.goggins.currentTime = 0;
+            sounds.goggins.play().catch((err) => {
+                console.warn("Autoplay was prevented:", err);
+            });
+            break;
+        case 'n':
+            updateBet(-100);
+            break;
+        case 'm':
+            sounds.intro.loop = false;
+            sounds.intro.currentTime = 0;
+            sounds.intro.play().catch((err) => {
+                console.warn("Autoplay was prevented:", err);
+            });
+            updateBet(100);
+            break;
+        case 'ArrowLeft':
+            updateBet(-10);
+            break;
+        case 'ArrowRight':
+            updateBet(10);
+            break;
+        case 'b':
+            updateBodyBackground(); 
+            const slotWrapper = document.querySelector('.slot-wrapper');
+            if (slotWrapper) {
+                slotWrapper.style.backgroundColor = 'transparent';
+            }
+            const slotInfo = document.querySelector('.slot-info');
+            if (slotInfo) {
+                slotInfo.style.color = 'black';
+            }
+            break;
+        default:
+            break;
     }
 });
 
